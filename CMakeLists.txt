@@ -34,6 +34,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     -Werror
 )
 
+
 target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -46,6 +47,18 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/s
 
 set(public_header include/async.h)
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${public_header}")
+
+
+
+#--------------------------------
+add_executable(test main.cpp)
+target_sources(test
+    PRIVATE
+        main.cpp
+)
+target_link_libraries(test PRIVATE async)
+#--------------------------------
+
 
 
 include(GNUInstallDirs)
