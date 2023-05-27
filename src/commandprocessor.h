@@ -46,6 +46,7 @@ private:
     std::atomic_int m_counter = 0;
     std::atomic_bool m_stop = false;
 
+    std::mutex m_blockMutex;
     std::shared_mutex m_mutex;
     std::condition_variable_any m_condition;
 

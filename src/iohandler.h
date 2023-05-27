@@ -14,12 +14,12 @@ public:
     IOHandler() = default;
     ~IOHandler();
 
-    std::thread::id connect(const size_t bulkSize);
-    void recieve(std::string &&buf, std::thread::id context);
-    void disconnect(std::thread::id id);
+    size_t connect(const size_t bulkSize);
+    void recieve(std::string &&buf, const size_t id);
+    void disconnect(const size_t id);
 
 private:
-    std::unordered_map<std::thread::id, CommandThread *> threads;
+    std::unordered_map<size_t, std::unique_ptr<CommandThread>> threads;
     std::mutex m_mutex;
 };
 
@@ -31,19 +31,16 @@ public:
     ~CommandThread();
 
     void feed(std::string &&data);
-    std::thread::id id() const
-    {
-        return m_workerThread.get_id();
-    };
+    size_t id();
 
 private:
     std::unique_ptr<CommandProcessor> processor;
     std::shared_ptr<IOHandler> m_ptr;
 
-    std::thread t1;
-    std::thread t2;
-    std::thread t3;
     std::thread m_workerThread;
+    std::array<std::thread, 3> threads;
+
+    size_t m_id;
 
     void wait();
 };

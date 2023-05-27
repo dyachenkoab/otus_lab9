@@ -3,15 +3,15 @@
 #include "conductor.h"
 
 namespace packer {
-std::thread::id connect(const size_t bulkSize)
+size_t connect(const size_t bulkSize)
 {
     return Conductor::instance().connect(bulkSize);
 }
-void recieve(std::string &&buf, std::thread::id context)
+void recieve(std::string &&buf, const size_t context)
 {
     Conductor::instance().recieve(std::move(buf), context);
 }
-void disconnect(std::thread::id id)
+void disconnect(const size_t id)
 {
     Conductor::instance().disconnect(id);
 }

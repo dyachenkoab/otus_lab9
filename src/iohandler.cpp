@@ -2,33 +2,33 @@
 
 IOHandler::~IOHandler()
 {
-    for (auto &[_, x] : threads) {
-        x->feed("");
-        delete x;
+    for (auto &[_, thread] : threads) {
+        thread->feed("");
     }
-    threads.erase(threads.begin(), threads.end());
+    threads.clear();
 }
 
-std::thread::id IOHandler::connect(const size_t bulkSize)
+size_t IOHandler::connect(const size_t bulkSize)
 {
     std::unique_lock { m_mutex };
-    auto commandThread = new CommandThread(shared_from_this(), bulkSize);
+    auto commandThread = std::make_unique<CommandThread>(shared_from_this(), bulkSize);
     auto id = commandThread->id();
-    threads[id] = commandThread;
+    threads[id] = std::move(commandThread);
     return id;
 }
 
-void IOHandler::recieve(std::string &&buf, std::thread::id id)
+void IOHandler::recieve(std::string &&buf, const size_t id)
 {
+    //    Передавать std'шные элементы через границу модуля std::thread::id, std::string часто нежелательно.
+    //    Причина - ABI. Даже дебажная и релизная сборка одной и той же версией компилятора могут генерировать несовместимый код.
     std::unique_lock { m_mutex };
-    threads.at(id)->feed(std::move(buf));
+    threads.at(id)->feed(buf.data());
 }
 
-void IOHandler::disconnect(std::thread::id id)
+void IOHandler::disconnect(const size_t id)
 {
     std::unique_lock { m_mutex };
     threads.at(id)->feed("");
-    delete threads.at(id);
     threads.erase(id);
 }
 
@@ -40,9 +40,9 @@ CommandThread::CommandThread(std::shared_ptr<IOHandler> ptr, const size_t bulkSi
     FilePrinter fPrinter(*processor);
     FilePrinter fPrinter1(*processor);
 
-    t1 = std::thread(&ConsolePrinter::update, printer);
-    t2 = std::thread(&FilePrinter::update, fPrinter);
-    t3 = std::thread(&FilePrinter::update, fPrinter1);
+    threads[0] = std::thread(&ConsolePrinter::update, printer);
+    threads[1] = std::thread(&FilePrinter::update, fPrinter);
+    threads[2] = std::thread(&FilePrinter::update, fPrinter1);
 
     m_workerThread = std::thread(&CommandThread::wait, this);
 }
@@ -58,9 +58,16 @@ void CommandThread::feed(std::string &&data)
         processor->push(std::move(data));
 }
 
+size_t CommandThread::id()
+{
+    using namespace std::chrono;
+    auto clock = system_clock::now();
+    return duration_cast<nanoseconds>(clock.time_since_epoch()).count();
+}
+
 void CommandThread::wait()
 {
-    t1.join();
-    t2.join();
-    t3.join();
+    for (auto &thread : threads) {
+        thread.join();
+    }
 }

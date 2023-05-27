@@ -3,11 +3,11 @@
 void iProcessor::attach(Observer *o)
 {
     std::lock_guard<std::mutex> lock(m_observersMutex);
-    m_observers.push_back(o);
+    m_observers.insert(o);
 }
 
 void iProcessor::detach(Observer *o)
 {
     std::lock_guard<std::mutex> lock(m_observersMutex);
-    m_observers.remove(o);
+    m_observers.erase(o);
 }

@@ -6,9 +6,9 @@ class Conductor
 {
 public:
     static Conductor &instance();
-    std::thread::id connect(const size_t bulkSize);
-    void recieve(std::string &&buf, std::thread::id context);
-    void disconnect(std::thread::id id);
+    size_t connect(const size_t bulkSize);
+    void recieve(std::string &&buf, const size_t context);
+    void disconnect(const size_t id);
 
 private:
     Conductor() : iohandler(new IOHandler()) { }

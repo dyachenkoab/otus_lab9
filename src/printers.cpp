@@ -6,10 +6,13 @@ template<typename T>
 void fillBuffer(std::ostream &buffer, const T &data)
 {
     buffer << "bulk: ";
-    for (const auto &x : data) {
-        buffer << x << ",";
+    if (!data.empty()) {
+        buffer << *data.begin();
+
+        for (auto it = std::next(data.begin()); it != data.end(); ++it) {
+            buffer << "," << *it;
+        }
     }
-    buffer.seekp(-1, std::ios_base::end);
     buffer << '\n';
 }
 
